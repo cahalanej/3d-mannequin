@@ -155,23 +155,29 @@ function setLights() {
 	dirLight.shadow.bias = -0.0001;
 }
 
-function toggleInMotion() {
+function toggleInMotion(e) {
 	inMotion = !inMotion;
+
+	previousMousePosition = {
+		x: e.offsetX,
+		y: e.offsetY
+	};
 }
 
 function initListeners() {
 	/* */
-	$(renderer.domElement).on('mousedown', function() {
-		toggleInMotion();
+	$(renderer.domElement).on('mousedown', function(e) {
+		toggleInMotion(e);
 
 		$(renderer.domElement).on('mousemove', _.throttle(dragNode, 30));
 	});
 
-	$(document).on('mouseup', function(){
-		toggleInMotion();
+	$(document).on('mouseup', function(e){
+		toggleInMotion(e);
 		$(renderer.domElement).off('mousemove');
 	});
 
+	// $(document).on('keypress', function())
 	$(renderer.domElement).on('mousedown', selectNode);
 }
 
@@ -181,7 +187,7 @@ function toRadians(deg) {
 }
 
 function dragNode(e) {
-	if (inMotion) {
+	if (inMotion && e.shiftKey) {
     	var deltaMove = {
 	        x: e.offsetX-previousMousePosition.x,
 	        y: e.offsetY-previousMousePosition.y
@@ -207,22 +213,24 @@ function dragNode(e) {
 
 function selectNode(event) {
 	event.preventDefault();
-	var selected = false;
+	if (!event.shiftKey) {
+		var selected = false;
 
-    mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+	    mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+		mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
 
-    raycaster.setFromCamera( mouse, camera );
+	    raycaster.setFromCamera( mouse, camera );
 
-    var intersects = raycaster.intersectObjects( nodes );
+	    var intersects = raycaster.intersectObjects( nodes );
 
-    _.each(nodes, function(node) {
-		if (_.isEmpty(intersects) || node !== intersects[0].object) {
-			node.material.color.setHex(0x9b1a5d);
-		} else {
-			selectedNode = intersects[0].object;
-			selectedNode.material.color.setHex(0x1eb1af);
-			selected = true;
-		}
-	});
+	    _.each(nodes, function(node) {
+			if (_.isEmpty(intersects) || node !== intersects[0].object) {
+				node.material.color.setHex(0x9b1a5d);
+			} else {
+				selectedNode = intersects[0].object;
+				selectedNode.material.color.setHex(0x1eb1af);
+				selected = true;
+			}
+		});
+	}
 }
